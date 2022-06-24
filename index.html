@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Automatic Hydroponics</title>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+        <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+        <script type="text/javascript" src="jquery-3.4.1.min.js"></script>
+        <style>
+            .column {
+          float: left;
+            }
+            body {
+                background-image: url("background.png");
+                background-repeat: no-repeat;
+                background-attachment: fixed;
+                background-size: 100%;
+            }
+            
+        </style>
+    </head>
+    <body>
+        
+        <nav style="line-height: 45px;height: 48px;">
+            <div class="w3-bar w3-border w3-green" style="padding-right: 8%;">
+                <a class="brand-logo center">Automatic Hydroponics</a>
+                <button class="w3-bar-item w3-button w3-right" onclick="openCity('Table');">History</button>
+                <button class="w3-bar-item w3-button w3-right" onclick="openCity('Recent')">Home</button>
+                
+            </div>
+                
+             
+        </nav>
+        <br>
+        <br>
+        
+        <div class="container" style="padding: 1%; width: 80%;padding-bottom: 4%;background-color: white;">
+            <div style="padding-left: 2%;padding-bottom: 3%;">
+                <h2 style="font-weight: bold;color: #1bd428;">Informasi Alat</h2>
+                
+            </div>
+            
+            <div class="row">
+                <div class="column" style="width: 40%;padding-left: 3%;">
+                    <img src="Alat.png" alt="Logo3" class="responsive" style="width: 70%;">
+                </div>
+    
+                <div class="column">
+                    <div id="Recent" class="w3-container city">
+                        <div>
+                            <h3 style="color: #1bd428;">Last Update</h3>
+                            <div class="row" style="width: 400px;">
+                                <div class="column" style="padding-right: 4%;" id="date">-</div>
+                                <div class="column" id="time">-</div>   
+                            </div>
+                            <hr>
+                
+                        </div>
+                        <div>
+                            <h3 style="color: #1bd428;">Status Sensor Tandon Atas</h3>
+                            <div class="w3-light-grey">
+                                <div id="myBar" class="w3-green w3-center" style="height:24px;width:0">0%</div>
+                            </div>
+                            <div class="row" style="width: 400px;">
+                                <div class="column" style="padding-right: 2%;" id="sensor1">-</div>
+                                <div class="column">cm</div>
+                            </div>
+                            <hr>
+                            
+                        </div>
+                        <div>
+                            <h3 style="color: #1bd428;">Status Sensor Tandon Bawah</h3>
+                            <div class="w3-light-grey">
+                                <div id="myBar2" class="w3-green w3-center" style="height:24px;width:0">0%</div>
+                            </div>
+                            <div class="row" style="width: 400px;">
+                                <div class="column" style="padding-right: 2%;" id="sensor2">-</div>
+                                <div class="column">cm</div>
+                            </div>
+                            <hr>
+                        </div>
+                
+                    </div>
+    
+                    <div id="Table" class="w3-container city" style="display:none;width:500px;">
+                        <table class="w3-table-all" id="alat">
+                            <thead>
+                              <tr class="w3-green">
+                                <th >Tandon Atas</th>
+                                <th >Tandon Bawah</th>
+                                <th >Date</th>
+                                <th >Time</th>
+                              </tr>
+                            </thead>
+                            <tbody></tbody>
+                            
+                          </table>
+                      </div>
+                       
+                </div>
+                
+            </div>
+        </div>
+        
+        
+
+        <script type="text/javascript">
+            $(document).ready(function(){
+                request_data();
+                request_table()
+                setInterval(function(){
+                    request_data();
+                    request_table()
+                    
+                }, 15000);
+            });
+            function request_data() {
+                $.ajax(
+                    {
+                        method: "GET",
+                        url:'http://localhost/iot/get.php',
+                        dataType: "json",
+                        success: function(resp){
+                            if(resp.status =='ok'){
+                                $('#date').html(resp.data[0].date);
+                                $('#time').html(resp.data[0].time);
+                                $('#sensor1').html(resp.data[0].sensor1);
+                                $('#sensor2').html(resp.data[0].sensor2);
+                                moveBar(resp.data[0].sensor1,"myBar");
+                                moveBar(resp.data[0].sensor2,"myBar2");
+                            } else {
+                                alert('Error = ' + resp.message);
+                            }
+                        }
+                    }
+                );
+            }
+
+            function request_table() {
+                $.ajax(
+                    {
+                        method: "GET",
+                        url:'http://localhost/iot/gettable.php',
+                        dataType: "json",
+                        success: function(resp){
+                            if(resp.status =='ok'){
+                                var len = resp.data.length;
+                                for(var i=0; i<len; i++) {
+                                    var sensor1 = resp.data[i].sensor1;
+                                    var sensor2 = resp.data[i].sensor2;
+                                    var date = resp.data[i].date;
+                                    var time = resp.data[i].time;
+                                    
+                                        var tr_str = "<tr>" +
+                                        "<td align='center'>" + sensor1 + ' cm' + "</td>" +
+                                        "<td align='center'>" + sensor2 + ' cm' + "</td>" +
+                                        "<td align='center'>" + date + "</td>" +
+                                        "<td align='center'>" + time + "</td>" +
+                                        "</tr>";
+
+                                        $("#alat tbody").append(tr_str);
+                                    
+                                    
+                                }
+                            } else {
+                                alert('Error = ' + resp.message);
+                            }
+                        }
+                    }
+                );
+            }
+
+             function openCity(menuName) {
+                var i;
+                var x = document.getElementsByClassName("city");
+                for (i = 0; i < x.length; i++) {
+                    x[i].style.display = "none";  
+                }
+                    document.getElementById(menuName).style.display = "block";  
+            } 
+            function moveBar(nilai,idBar) {
+                var elem = document.getElementById(idBar);   
+                var width = 0;
+                var id = setInterval(frame, 50);
+                function frame() {
+                    if (width >= 100) {
+                        clearInterval(id);
+                        
+                    } else {
+                        clearInterval(id);
+                        elem.style.width = nilai/4*100 + '%'; 
+                        elem.innerHTML = nilai/4*100  + '%';
+                                        
+                        
+                    }
+                }
+            }
+            
+        </script>
+    </body>
+</html>
